@@ -3,7 +3,10 @@ import { validateRequiredFields, getEmailServices } from '../utils/email.utils';
 
 const sendEmail = async (req: NextApiRequest, res: NextApiResponse) => {
   const { method, body } = req;
-  if (method !== 'POST') return res.status(405).json({ error: `${method} method not allowed.` });
+  if (method !== 'POST') {
+    res.status(405).json({ error: `${method} method not allowed.` });
+    return;
+  }
   
   try {
     const { defaultService: defaultServiceProvider, ...requiredFields } = body;
@@ -19,13 +22,13 @@ const sendEmail = async (req: NextApiRequest, res: NextApiResponse) => {
       await defaultService.send(body);
       return res.status(200).json({ message: `Email sent successfully with ${defaultServiceName}.` });
     } catch (defaultServiceError) {
-      console.error(`Error using ${defaultServiceName} service: ${defaultServiceError}`,);
+      console.error(`Default service error using ${defaultServiceName}: ${defaultServiceError}`, );
 
       try {
         await fallbackService.send(body);
         return res.status(200).json({ message: `Email sent successfully with fallback service ${fallbackServiceName}.` });
       } catch (fallbackServiceError) {
-        console.error(`Error using ${fallbackServiceName} service: ${fallbackServiceError}`, );
+        console.error(`Fallback service error using ${fallbackServiceName}: ${fallbackServiceError}`, );
         return res.status(500).json({ error: 'Email sending failed with both services.' });
       }
 

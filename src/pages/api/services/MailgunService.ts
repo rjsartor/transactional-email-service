@@ -15,6 +15,30 @@ class MailgunService {
     this.serviceName = EmailServiceEnum.MAILGUN;
   }
 
+  async send(payload: EmailPayload): Promise<AxiosResponse> {
+    if (!this.apiKey) {
+      throw new Error('Mailgun API key missing');
+    }
+  
+    try {
+      const params = this.generateRequestParams(payload);
+      const response = await axios.post(`${this.baseUrl}/${this.domainName}/messages`, params, {
+        auth: {
+          username: 'api',
+          password: this.apiKey,
+        },
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded;charset=utf-8',
+        },
+      });
+
+      return response;
+    } catch (error) {
+      console.error('MailgunService Error:', error);
+      throw error;
+    }
+  }
+
   private generateRequestParams({
     from,
     to,
@@ -31,26 +55,6 @@ class MailgunService {
     params.append('text', convertHtmlToPlainText(body));
 
     return params;
-  }
-
-  async send(payload: EmailPayload): Promise<AxiosResponse> {
-    try {
-      const params = this.generateRequestParams(payload);
-      const response = await axios.post(`${this.baseUrl}/${this.domainName}/messages`, params, {
-        auth: {
-          username: 'api',
-          password: this.apiKey,
-        },
-        headers: {
-          'content-type': 'application/x-www-form-urlencoded;charset=utf-8',
-        },
-      });
-
-      return response;
-    } catch (error) {
-      console.error('Mailgun Error:', error);
-      throw error;
-    }
   }
 }
 

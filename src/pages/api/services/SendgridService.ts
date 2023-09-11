@@ -1,6 +1,6 @@
+import axios, { AxiosResponse } from 'axios';
 import { EmailPayload, EmailServiceEnum, SendgridRequestBody } from '@/pages/types/email.types';
 import { convertHtmlToPlainText } from '@/pages/utils/email.utils';
-import axios, { AxiosResponse } from 'axios';
 
 class SendgridService {
   private baseUrl: string;
@@ -14,6 +14,10 @@ class SendgridService {
   }
 
   async send(payload: EmailPayload): Promise<AxiosResponse> {
+    if (!this.apiKey) {
+      throw new Error('Sendgrid API key missing');
+    }
+
     try {
       const requestBody = this.generateRequestBody(payload);
       const response = await axios.post(this.baseUrl, requestBody, {
@@ -25,10 +29,12 @@ class SendgridService {
 
       return response;
     } catch (error) {
+      console.error('SendgridService Error:', error);
       throw error;
     }
   }
 
+  // https://docs.sendgrid.com/api-reference/mail-send/mail-send
   private generateRequestBody({
     from,
     to,
